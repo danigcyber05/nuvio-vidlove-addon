@@ -1,43 +1,4 @@
-import * as cheerio from 'cheerio';
-
-const HEADERS = {
-  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:156.0) Gecko/20100101 Firefox/156.0",
-  "Referer": "https://player.vidlove.cc/",
-  "Origin": "https://player.vidlove.cc"
-};
-
-async function scrapeVidLove(type, tmdbId, season, episode) {
-  try {
-    const embedUrl = type === 'movie'
-      ? `https://player.vidlove.cc/embed/movie/${tmdbId}`
-      : `https://player.vidlove.cc/embed/tv/${tmdbId}/${season}/${episode}`;
-
-    const pageRes = await fetch(embedUrl, { headers: HEADERS });
-    if (!pageRes.ok) return null;
-
-    const html = await pageRes.text();
-    const $ = cheerio.load(html);
-
-    let streamUrl = null;
-
-    $('script').each((_, el) => {
-      const content = $(el).html() || '';
-      const match = content.match(/['"](https:\/\/a2\.whysosigmabro\.fun\/api\?[^'"]+seg=index\.m3u8[^'"]*)['"]/);
-      if (match && !streamUrl) streamUrl = match[1];
-    });
-
-    if (!streamUrl) {
-      streamUrl = $('source[type="application/x-mpegURL"]').attr('src')
-               || $('video source').attr('src');
-    }
-
-    return streamUrl;
-  } catch (err) {
-    console.error(`Scrape failed: ${type}/${tmdbId}`, err.message);
-    return null;
-  }
-}
-
+// api/stream.js
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
@@ -56,20 +17,19 @@ export default async function handler(req, res) {
     return res.status(200).json({ streams: [] });
   }
 
-  const streamUrl = await scrapeVidLove(type, tmdbId, season, episode);
-
-  if (!streamUrl) {
-    return res.status(200).json({ streams: [] });
-  }
+  // Constrói URL do embed exatamente como o VidLove espera
+  const embedUrl = type === 'movie'
+    ? `https://player.vidlove.cc/embed/movie/${tmdbId}?autoplay=true`
+    : `https://player.vidlove.cc/embed/tv/${tmdbId}/${season}/${episode}?autoplay=true`;
 
   res.status(200).json({
     streams: [{
       name: "VidLove",
       title: `⚡ VidLove\n🎬 ${type === 'movie' ? 'Filme' : `S${season}E${episode}`}`,
-      url: streamUrl,
+      url: embedUrl,
       behaviorHints: {
-        notWebReady: true,
-        proxyHeaders: { request: HEADERS }
+        notWebReady: false,
+        bingeable: type === 'series'
       }
     }]
   });
