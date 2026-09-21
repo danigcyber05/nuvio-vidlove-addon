@@ -1,15 +1,25 @@
 {
-  "rewrites": [
-    { "source": "/manifest.json", "destination": "/api/manifest" },
-    { "source": "/stream/:type/:id.json", "destination": "/api/stream" },
-    { "source": "/stream/:type/:id/:season/:episode.json", "destination": "/api/stream" }
+  "version": 2,
+  "builds": [
+    { "src": "api/**/*.js", "use": "@vercel/node" }
   ],
-  "headers": [
+  "routes": [
     {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" }
-      ]
+      "src": "/manifest.json",
+      "dest": "/api/manifest.js"
+    },
+    {
+      "src": "/stream/([^/]+)/([^/]+)\\.json",
+      "dest": "/api/stream.js?type=$1&id=$2"
+    },
+    {
+      "src": "/stream/([^/]+)/([^/]+)/([^/]+)/([^/]+)\\.json",
+      "dest": "/api/stream.js?type=$1&id=$2&season=$3&episode=$4"
     }
-  ]
+  ],
+  "functions": {
+    "api/stream.js": {
+      "maxDuration": 60
+    }
+  }
 }
