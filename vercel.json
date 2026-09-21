@@ -1,0 +1,15 @@
+{
+  "rewrites": [
+    { "source": "/manifest.json", "destination": "/api/manifest" },
+    { "source": "/stream/:type/:id.json", "destination": "/api/stream" },
+    { "source": "/stream/:type/:id/:season/:episode.json", "destination": "/api/stream" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    }
+  ]
+}
