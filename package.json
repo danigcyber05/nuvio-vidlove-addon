@@ -2,5 +2,8 @@
   "name": "nuvio-vidlove-addon",
   "version": "1.0.0",
   "private": true,
-  "dependencies": {}
+  "dependencies": {
+    "puppeteer-core": "^23.0.0",
+    "@sparticuz/chromium": "^127.0.0"
+  }
 }
